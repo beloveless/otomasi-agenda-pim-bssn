@@ -1,4 +1,4 @@
-import gspread, datetime, requests, os, json, io
+import gspread, datetime, requests, os, json
 from oauth2client.service_account import ServiceAccountCredentials
 from gspread_formatting import *
 from datetime import datetime as dt
@@ -6,18 +6,21 @@ from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 from telegram import Bot
 
-# === Konfigurasi ===
-scope = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
-creds_path = os.path.join(os.path.dirname(__file__), 'teamup-425709-8333962f3c28.json')
+# === Konfigurasi dari environment ===
 spreadsheet_id = '1vn6sMouwi9OOkgSdDNg18Hz_UzTsEFSvQH--WSpOHP4'
-bot_token = '7135848774:AAGlJLq4eR4WXaS6k8KHL4RoJkywJ09b7mo'
-chat_id = '642574222'
-teamup_token = '7c35b104dc19267c81d4914d2e70159f1b9f5274a4e612e4c6e0a1fd766b54ab'
+bot_token = os.getenv('TELEGRAM_TOKEN')
+chat_id = os.getenv('CHAT_ID')
+teamup_token = os.getenv('TEAMUP_TOKEN')
+
+# === Buat file kredensial dari secret ===
+with open('creds.json', 'w') as f:
+    f.write(os.getenv('GOOGLE_CREDS'))
 
 # === Autentikasi Google API ===
-creds = ServiceAccountCredentials.from_json_keyfile_name(creds_path, scope)
+scope = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+creds = ServiceAccountCredentials.from_json_keyfile_name('creds.json', scope)
 client = gspread.authorize(creds)
-drive_creds = service_account.Credentials.from_service_account_file(creds_path, scopes=scope)
+drive_creds = service_account.Credentials.from_service_account_file('creds.json', scopes=scope)
 
 # === Tanggal dan Worksheet ===
 today = datetime.date.today()
@@ -110,6 +113,7 @@ remerge_and_number_blocks(worksheet)
 if not drive_creds.valid:
     drive_creds.refresh(Request())
 
+# === Ekspor PDF ===
 export_url = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=pdf&portrait=false&gridlines=false&size=A4&fitw=true&gid={worksheet._properties['sheetId']}"
 headers = {"Authorization": f"Bearer {drive_creds.token}"}
 pdf_file_name = f"agenda_{tomorrow_str}.pdf"
@@ -122,4 +126,4 @@ bot = Bot(token=bot_token)
 with open(pdf_file_name, 'rb') as file:
     bot.send_document(chat_id=chat_id, document=file, filename=pdf_file_name)
 
-print("Selesai: data migrasi, pengisian, penghapusan blok kosong, dan pengiriman PDF ke Telegram.")
+print("✅ Selesai: migrasi data, pengisian default, hapus blok kosong, ekspor PDF, kirim ke Telegram.")
