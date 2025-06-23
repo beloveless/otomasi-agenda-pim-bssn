@@ -46,6 +46,27 @@ except gspread.WorksheetNotFound:
     print(f"❌ Worksheet '{worksheet_name}' tidak ditemukan.")
     exit(1)
 
+try:
+    worksheet = spreadsheet.worksheet(worksheet_name)
+except gspread.WorksheetNotFound:
+    print(f"❌ Worksheet '{worksheet_name}' tidak ditemukan.")
+    exit(1)
+
+# === Tambahan: Menuliskan Hari dan Tanggal setelah Judul ===
+def tulis_hari_dan_tanggal(ws, tanggal: datetime.date):
+    hari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'][tanggal.weekday()]
+    tanggal_str = tanggal.strftime('%d %B %Y')
+    keterangan = f"{hari}, {tanggal_str}"
+    
+    all_values = ws.get_all_values()
+    for i, row in enumerate(all_values, start=1):
+        if any("Agenda Kegiatan Pimpinan BSSN" in cell for cell in row):
+            ws.update_cell(i+1, 2, keterangan)  # Baris di bawahnya, kolom B
+            print(f"🗓️ Ditambahkan keterangan tanggal: {keterangan} di baris {i+1}")
+            break
+
+tulis_hari_dan_tanggal(worksheet, tomorrow)
+
 # === Fungsi Format dan Migrasi ===
 def format_time(start_datetime_str, end_datetime_str):
     start_dt = dt.fromisoformat(start_datetime_str)
