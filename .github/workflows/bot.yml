@@ -1,0 +1,35 @@
+name: Run Bot Daily at 19:45 WIB
+
+on:
+  schedule:
+    - cron: '45 12 * * *'  # 19:45 WIB = 12:45 UTC
+  workflow_dispatch:  # opsional: bisa dijalankan manual juga
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install gspread oauth2client gspread-formatting google-api-python-client telegram requests
+
+      - name: Create credentials file
+        run: |
+          echo "${{ secrets.GOOGLE_CREDS }}" > creds.json
+
+      - name: Run bot script
+        run: |
+          python bot.py
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
