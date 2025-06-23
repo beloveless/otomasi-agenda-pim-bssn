@@ -5,6 +5,7 @@ from datetime import datetime as dt
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 from telegram import Bot
+import asyncio
 
 # === Debug: Periksa variabel environment ===
 bot_token = os.getenv('TELEGRAM_TOKEN')
@@ -134,10 +135,14 @@ print(f"✅ PDF berhasil dibuat: {pdf_file_name}")
 print(f"📁 Cek file ada? {os.path.exists(pdf_file_name)}")
 
 # === Kirim ke Telegram ===
-try:
-    bot = Bot(token=bot_token)
-    with open(pdf_file_name, 'rb') as file:
-        bot.send_document(chat_id=chat_id, document=file, filename=pdf_file_name)
-    print("✅ PDF berhasil dikirim ke Telegram.")
-except Exception as e:
-    print(f"❌ Gagal mengirim ke Telegram: {e}")
+async def send_pdf():
+    try:
+        bot = Bot(token=bot_token)
+        with open(pdf_file_name, 'rb') as file:
+            await bot.send_document(chat_id=chat_id, document=file, filename=pdf_file_name)
+        print("✅ PDF berhasil dikirim ke Telegram.")
+    except Exception as e:
+        print(f"❌ Gagal mengirim ke Telegram: {e}")
+
+# Jalankan fungsi async
+asyncio.run(send_pdf())
