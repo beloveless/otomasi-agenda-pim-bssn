@@ -4,7 +4,7 @@ from gspread_formatting import *
 from datetime import datetime as dt
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
-from telegram import Bot
+from telegram.bot import Bot
 
 # === Konfigurasi dari environment ===
 spreadsheet_id = '1vn6sMouwi9OOkgSdDNg18Hz_UzTsEFSvQH--WSpOHP4'
