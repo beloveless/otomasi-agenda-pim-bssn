@@ -6,7 +6,6 @@ from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 from telegram import Bot
 
-
 # === Konfigurasi dari environment ===
 spreadsheet_id = '1vn6sMouwi9OOkgSdDNg18Hz_UzTsEFSvQH--WSpOHP4'
 bot_token = os.getenv('TELEGRAM_TOKEN')
