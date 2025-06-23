@@ -1,5 +1,4 @@
-import gspread, datetime, requests, os, json
-from oauth2client.service_account import ServiceAccountCredentials
+import gspread, datetime, requests, os, json, pytz  # ✅ Tambah pytzfrom oauth2client.service_account import ServiceAccountCredentials
 from gspread_formatting import *
 from datetime import datetime as dt
 from google.oauth2 import service_account
@@ -29,8 +28,10 @@ creds = ServiceAccountCredentials.from_json_keyfile_name('creds.json', scope)
 client = gspread.authorize(creds)
 drive_creds = service_account.Credentials.from_service_account_file('creds.json', scopes=scope)
 
-# === Tanggal dan Worksheet ===
-today = datetime.date.today()
+# === Tanggal dan Worksheet (Zona waktu Asia/Jakarta) ===
+jakarta = pytz.timezone("Asia/Jakarta")
+now_jakarta = datetime.datetime.now(jakarta)
+today = now_jakarta.date()
 tomorrow = today + datetime.timedelta(days=1)
 tomorrow_str = tomorrow.strftime('%Y-%m-%d')
 day_index = tomorrow.weekday()
