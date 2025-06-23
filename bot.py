@@ -54,7 +54,7 @@ except gspread.WorksheetNotFound:
     exit(1)
 
 # === Tambahan: Menuliskan Hari dan Tanggal setelah Judul ===
-from gspread_formatting import CellFormat, TextFormat, HorizontalAlign, format_cell_range
+from gspread_formatting import CellFormat, TextFormat, format_cell_range
 
 def tulis_hari_dan_tanggal(ws, tanggal: datetime.date):
     hari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'][tanggal.weekday()]
@@ -70,7 +70,7 @@ def tulis_hari_dan_tanggal(ws, tanggal: datetime.date):
     # Terapkan format rata tengah dan bold
     format_cell_range(ws, 'A2:H2', CellFormat(
         textFormat=TextFormat(bold=True),
-        horizontalAlignment=HorizontalAlign.CENTER
+        horizontalAlignment='CENTER'
     ))
 
     print(f"🗓️ Ditambahkan keterangan tanggal di baris 2 (A2:H2): {keterangan}")
