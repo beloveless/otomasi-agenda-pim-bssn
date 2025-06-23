@@ -1,8 +1,10 @@
-name: Run Bot Daily at 20.00 WIB
+name: Run Bot Daily at 20:30 WIB
 
 on:
-  push:          # Trigger saat ada push ke repo (default: semua branch)
-  workflow_dispatch:  # Bisa juga dijalankan manual
+  push:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 13 * * *'  # 20:30 WIB
 
 jobs:
   run-bot:
@@ -42,3 +44,9 @@ jobs:
           CHAT_ID: ${{ secrets.CHAT_ID }}
           TEAMUP_TOKEN: ${{ secrets.TEAMUP_TOKEN }}
           GOOGLE_CREDS: ${{ secrets.GOOGLE_CREDS }}
+
+      - name: Upload PDF as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agenda-pdf
+          path: agenda_*.pdf
