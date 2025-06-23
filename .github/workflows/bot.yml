@@ -6,7 +6,7 @@ on:
   schedule:
     - cron: '30 23 * * *'  # 06:30 WIB = 23:30 UTC (hari sebelumnya)
 
-    
+
 jobs:
   run-bot:
     runs-on: ubuntu-latest
@@ -32,6 +32,7 @@ jobs:
                       gspread-formatting==1.1.2 \
                       google-api-python-client==2.126.0 \
                       python-telegram-bot==20.6
+                      pytz
 
       - name: Create Google credentials file
         run: |
