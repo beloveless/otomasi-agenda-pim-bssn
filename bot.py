@@ -61,8 +61,8 @@ def tulis_hari_dan_tanggal(ws, tanggal: datetime.date):
     tanggal_str = tanggal.strftime('%d %B %Y')
     keterangan = f"{hari}, {tanggal_str}"
 
-    # Tulis isi sel A2
-    ws.update('A2', keterangan)
+    # ✅ Perbaikan bagian ini
+    ws.update('A2', [[keterangan]])
 
     # Merge sel A2 sampai H2
     ws.merge_cells('A2:H2')
