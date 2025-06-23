@@ -105,6 +105,7 @@ if data:
         worksheet.update_cell(row+1, col, f"{e['title']} di {e.get('location', '')}".strip())
         subcalendar_to_row[e['subcalendar_id']] = row + 7
 
+
 # === Tahapan Lanjutan ===
 isi_jika_kosong(worksheet)
 remove_empty_agenda_blocks(worksheet)
