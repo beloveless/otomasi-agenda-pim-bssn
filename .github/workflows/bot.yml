@@ -1,9 +1,10 @@
-name: Run Bot Daily at 19:45 WIB
+name: Run Bot Daily at 20.00 WIB
 
 on:
   schedule:
     - cron: '0 13 * * *'  # 19:45 WIB (UTC+7) = 12:45 UTC
-  # workflow_dispatch:
+  workflow_dispatch:
+
 
 jobs:
   run-bot:
