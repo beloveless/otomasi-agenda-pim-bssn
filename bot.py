@@ -1,6 +1,7 @@
-import gspread, datetime, requests, os, json
+import gspread, datetime, requests, os, json, pytz
 from oauth2client.service_account import ServiceAccountCredentials
 from gspread_formatting import *
+from gspread_formatting import CellFormat, Borders, Border, Color, format_cell_range
 from datetime import datetime as dt
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
@@ -29,8 +30,10 @@ creds = ServiceAccountCredentials.from_json_keyfile_name('creds.json', scope)
 client = gspread.authorize(creds)
 drive_creds = service_account.Credentials.from_service_account_file('creds.json', scopes=scope)
 
-# === Tanggal dan Worksheet ===
-today = datetime.date.today()
+# === Tanggal dan Worksheet (Zona waktu Asia/Jakarta) ===
+jakarta = pytz.timezone("Asia/Jakarta")
+now_jakarta = datetime.datetime.now(jakarta)
+today = now_jakarta.date()
 tomorrow = today + datetime.timedelta(days=1)
 tomorrow_str = tomorrow.strftime('%Y-%m-%d')
 day_index = tomorrow.weekday()
@@ -43,32 +46,25 @@ spreadsheet = client.open_by_key(spreadsheet_id)
 try:
     worksheet = spreadsheet.worksheet(worksheet_name)
 except gspread.WorksheetNotFound:
-    print(f"❌ Worksheet '{worksheet_name}' tidak ditemukan.")
-    exit(1)
+    print(f"⚠️ Worksheet '{worksheet_name}' tidak ditemukan. Membuat baru...")
+    worksheet = spreadsheet.add_worksheet(title=worksheet_name, rows="100", cols="10")
 
-
-try:
-    worksheet = spreadsheet.worksheet(worksheet_name)
-except gspread.WorksheetNotFound:
-    print(f"❌ Worksheet '{worksheet_name}' tidak ditemukan.")
-    exit(1)
-
-# === Tambahan: Menuliskan Hari dan Tanggal setelah Judul ===
+# === Menuliskan Hari dan Tanggal setelah Judul ===
 def tulis_hari_dan_tanggal(ws, tanggal: datetime.date):
     hari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'][tanggal.weekday()]
     tanggal_str = tanggal.strftime('%d %B %Y')
     keterangan = f"{hari}, {tanggal_str}"
-    
-    all_values = ws.get_all_values()
-    for i, row in enumerate(all_values, start=1):
-        if any("Agenda Kegiatan Pimpinan BSSN" in cell for cell in row):
-            ws.update_cell(i+1, 2, keterangan)  # Baris di bawahnya, kolom B
-            print(f"🗓️ Ditambahkan keterangan tanggal: {keterangan} di baris {i+1}")
-            break
+    ws.update(range_name='A2', values=[[keterangan]])
+    ws.merge_cells('A2:H2')
+    format_cell_range(ws, 'A2:H2', CellFormat(
+        textFormat=TextFormat(bold=True),
+        horizontalAlignment='CENTER'
+    ))
+    print(f"🗓️ Ditambahkan keterangan tanggal di baris 2 (A2:H2): {keterangan}")
 
 tulis_hari_dan_tanggal(worksheet, tomorrow)
 
-# === Fungsi Format dan Migrasi ===
+# === Fungsi bantu ===
 def format_time(start_datetime_str, end_datetime_str):
     start_dt = dt.fromisoformat(start_datetime_str)
     end_dt = dt.fromisoformat(end_datetime_str)
@@ -80,12 +76,23 @@ def get_teamup_data(url, token):
     response.raise_for_status()
     return response.json()
 
+# === Fungsi untuk border ===
+def set_border(ws, range_string, style='SOLID', color=Color(0, 0, 0)):
+    border = Borders(
+        top=Border(style=style, color=color),
+        bottom=Border(style=style, color=color),
+        left=Border(style=style, color=color),
+        right=Border(style=style, color=color)
+    )
+    fmt = CellFormat(borders=border)
+    format_cell_range(ws, range_string, fmt)
+
 def add_rows_with_border(ws, count):
     last_row = len(ws.get_all_values())
     for _ in range(count):
-        ws.insert_rows([[''] * 8 for _ in range(7)], row=last_row+1)
-        for i in range(last_row+1, last_row+8):
-            set_border(ws, f"B{i}:I{i}", style='SOLID', color=Color(0,0,0))
+        ws.insert_rows([[''] * 8 for _ in range(7)], row=last_row + 1)
+        for i in range(last_row + 1, last_row + 8):
+            set_border(ws, f"B{i}:I{i}", style='SOLID', color=Color(0, 0, 0))
         last_row += 7
 
 def remerge_and_number_blocks(ws):
@@ -152,7 +159,6 @@ response = requests.get(export_url, headers=headers)
 
 with open(pdf_file_name, 'wb') as f:
     f.write(response.content)
-
 
 print(f"✅ PDF berhasil dibuat: {pdf_file_name}")
 print(f"📁 Cek file ada? {os.path.exists(pdf_file_name)}")
