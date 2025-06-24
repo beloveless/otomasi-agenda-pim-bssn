@@ -1,4 +1,4 @@
-import gspread, datetime, requests, os, json
+import gspread, datetime, requests, os, json, pytz
 from oauth2client.service_account import ServiceAccountCredentials
 from gspread_formatting import *
 from datetime import datetime as dt
@@ -43,17 +43,21 @@ except Exception as e:
 
 # === Tanggal & Worksheet ===
 try:
-    today = datetime.date.today()
+    jakarta = pytz.timezone("Asia/Jakarta")
+    now_jakarta = datetime.datetime.now(jakarta)
+    today = now_jakarta.date()
     tomorrow = today + datetime.timedelta(days=1)
     tomorrow_str = tomorrow.strftime('%Y-%m-%d')
     day_index = tomorrow.weekday()
     sheet_name = tomorrow.strftime("%d").lstrip('0')
 
+    print(f"🕓 Sekarang (WIB): {now_jakarta.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"📅 Target agenda tanggal: {tomorrow_str}")
+
     spreadsheet_id = '1vn6sMouwi9OOkgSdDNg18Hz_UzTsEFSvQH--WSpOHP4'
     spreadsheet = client.open_by_key(spreadsheet_id)
     worksheet = spreadsheet.worksheet(sheet_name)
     print(f"✅ Worksheet '{sheet_name}' ditemukan.")
-    
 except gspread.WorksheetNotFound:
     print(f"❌ Worksheet '{sheet_name}' tidak ditemukan.")
     exit(1)
@@ -65,19 +69,12 @@ def tulis_hari_dan_tanggal(ws, tanggal: datetime.date):
     hari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'][tanggal.weekday()]
     tanggal_str = tanggal.strftime('%d %B %Y')
     keterangan = f"{hari}, {tanggal_str}"
-
-    # ✅ Perbaikan bagian ini
     ws.update('A2', [[keterangan]])
-
-    # Merge sel A2 sampai H2
     ws.merge_cells('A2:H2')
-
-    # Terapkan format rata tengah dan bold
     format_cell_range(ws, 'A2:H2', CellFormat(
         textFormat=TextFormat(bold=True),
         horizontalAlignment='CENTER'
     ))
-
     print(f"🗓️ Ditambahkan keterangan tanggal di baris 2 (A2:H2): {keterangan}")
 
 # === Fungsi Utilitas ===
@@ -116,7 +113,7 @@ def remerge_and_number_blocks(ws):
 
 def remove_empty_agenda_blocks(ws):
     data = ws.get_all_values()
-    for start_row in reversed(range(13, len(data)+1, 7)):  # mulai dari blok kedua
+    for start_row in reversed(range(13, len(data)+1, 7)):
         block = data[start_row-1:start_row+6]
         if all(all(cell.strip() == '' for cell in row[1:8]) for row in block):
             for _ in range(7):
@@ -190,15 +187,12 @@ except Exception as e:
 async def send_telegram_message_and_file(file_path, token, chat_id, agenda_date):
     application = ApplicationBuilder().token(token).build()
     async with application:
-        # Pesan teks
         try:
             message_text = f"📅 Berikut adalah agenda pimpinan untuk tanggal *{agenda_date}*."
             await application.bot.send_message(chat_id=chat_id, text=message_text, parse_mode="Markdown")
             print("✅ Pesan teks terkirim.")
         except Exception as e:
             print(f"⚠️ Gagal kirim pesan teks: {e}")
-
-        # Kirim PDF
         try:
             with open(file_path, 'rb') as file:
                 await application.bot.send_document(chat_id=chat_id, document=file, filename=os.path.basename(file_path))
