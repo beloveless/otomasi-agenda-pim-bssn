@@ -31,8 +31,8 @@ jobs:
                       gspread==6.1.2 \
                       gspread-formatting==1.1.2 \
                       google-api-python-client==2.126.0 \
-                      python-telegram-bot==20.6
-                      pytz
+                      python-telegram-bot==20.6 \
+                      pytz  
 
       - name: Create Google credentials file
         run: |
