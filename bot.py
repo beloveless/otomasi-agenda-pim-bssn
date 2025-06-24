@@ -94,6 +94,7 @@ def isi_jika_kosong(ws):
 # === Proses Migrasi ===
 subcalendar_to_col = {10858904: 2, 10859020: 3, 10860315: 4, 10859016: 5, 10859017: 6, 10859018: 7, 10859019: 8}
 subcalendar_to_row = {k: 6 for k in subcalendar_to_col}
+subcalendar_to_index = {k: 0 for k in subcalendar_to_col}
 
 teamup_url = f'https://api.teamup.com/ksjvi17ce1ipimpco8/events?startDate={tomorrow_str}&endDate={tomorrow_str}&tz=Asia/Jakarta'
 data = get_teamup_data(teamup_url, teamup_token)
@@ -101,7 +102,14 @@ data = get_teamup_data(teamup_url, teamup_token)
 if data:
     events = data.get("events", [])
     print(f"📅 Jumlah event ditemukan: {len(events)}")
-    needed_blocks = (len(events) + 6) // 7
+
+    # Hitung kebutuhan blok maksimum per kolom kalender
+    counts = {k: 0 for k in subcalendar_to_col}
+    for e in events:
+        if e['subcalendar_id'] in counts:
+            counts[e['subcalendar_id']] += 1
+    needed_blocks = max((c + 6) // 7 for c in counts.values())
+
     current_rows = len(worksheet.get_all_values())
     current_blocks = (current_rows - 5) // 7
     if needed_blocks > current_blocks:
@@ -110,10 +118,11 @@ if data:
     for e in events:
         col = subcalendar_to_col.get(e['subcalendar_id'])
         if not col: continue
-        row = subcalendar_to_row[e['subcalendar_id']]
+        index = subcalendar_to_index[e['subcalendar_id']]
+        row = subcalendar_to_row[e['subcalendar_id']] + (index * 7)
         worksheet.update_cell(row, col, format_time(e['start_dt'], e['end_dt']))
         worksheet.update_cell(row+1, col, f"{e['title']} di {e.get('location', '')}".strip())
-        subcalendar_to_row[e['subcalendar_id']] = row + 7
+        subcalendar_to_index[e['subcalendar_id']] += 1
 
 isi_jika_kosong(worksheet)
 remove_empty_agenda_blocks(worksheet)
@@ -123,7 +132,7 @@ remerge_and_number_blocks(worksheet)
 if not drive_creds.valid:
     drive_creds.refresh(Request())
 
-export_url = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=pdf&portrait=false&gridlines=false&size=A4&fitw=true&gid={worksheet._properties['sheetId']}"
+export_url = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?format=pdf&portrait=false&gridlines=false&size=A4&fitw=true&scale=4&top_margin=0.5&bottom_margin=0.5&left_margin=0.5&right_margin=0.5&gid={worksheet._properties['sheetId']}"
 headers = {"Authorization": f"Bearer {drive_creds.token}"}
 pdf_file_name = f"agenda_{tomorrow_str}.pdf"
 response = requests.get(export_url, headers=headers)
@@ -135,12 +144,6 @@ print(f"✅ PDF berhasil dibuat: {pdf_file_name}")
 print(f"📁 Cek file ada? {os.path.exists(pdf_file_name)}")
 
 # === Kirim ke Telegram ===
-async def send_pdf():
-    bot = Bot(token=bot_token)
-    with open(pdf_file_name, 'rb') as file:
-        await bot.send_document(chat_id=chat_id, document=file, filename=pdf_file_name)
-
-# Panggil fungsi async
 async def send_pdf():
     try:
         bot = Bot(token=bot_token)
