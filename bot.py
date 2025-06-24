@@ -60,28 +60,6 @@ except Exception as e:
     print(f"❌ Gagal membuka worksheet: {e}")
     exit(1)
 
-# === Tambahkan hari dan tanggal di row 2 (merge A2:H2) ===
-try:
-    # Tentukan nama hari dalam Bahasa Indonesia
-    hari_dalam_bahasa = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
-    nama_hari = hari_dalam_bahasa[tomorrow.weekday()]
-    tanggal_display = f"{nama_hari}, {tomorrow.strftime('%d %B %Y')}"
-
-    # Update sel A2 dengan tanggal
-    worksheet.update('A2', tanggal_display)
-
-    # Merge cell A2:H2
-    worksheet.merge_cells('A2:H2')
-
-    # Format teks: tebal dan rata tengah
-    format_cell_range(worksheet, 'A2:H2', CellFormat(
-        textFormat=TextFormat(bold=True),
-        horizontalAlignment='CENTER'))
-
-    print(f"✅ Hari dan tanggal berhasil ditambahkan dan diformat: {tanggal_display}")
-except Exception as e:
-    print(f"❌ Gagal menambahkan hari/tanggal ke worksheet: {e}")
-
 # === Fungsi Utilitas ===
 def format_time(start, end):
     start_dt = dt.fromisoformat(start)
@@ -171,6 +149,20 @@ try:
     print("✅ Worksheet berhasil diformat.")
 except Exception as e:
     print(f"❌ Gagal memformat worksheet: {e}")
+
+# === Tambahkan hari dan tanggal di row 2 (merge A2:H2) ===
+try:
+    hari_dalam_bahasa = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
+    nama_hari = hari_dalam_bahasa[tomorrow.weekday()]
+    tanggal_display = f"{nama_hari}, {tomorrow.strftime('%d %B %Y')}"
+    worksheet.update('A2', tanggal_display)
+    worksheet.merge_cells('A2:H2')
+    format_cell_range(worksheet, 'A2:H2', CellFormat(
+        textFormat=TextFormat(bold=True),
+        horizontalAlignment='CENTER'))
+    print(f"✅ Hari dan tanggal berhasil ditambahkan dan diformat: {tanggal_display}")
+except Exception as e:
+    print(f"❌ Gagal menambahkan hari/tanggal ke worksheet: {e}")
 
 # === Ekspor PDF ===
 try:
