@@ -61,7 +61,8 @@ try:
         # Pastikan worksheet minimal punya 2 baris
         current_rows = len(worksheet.get_all_values())
         if current_rows < 2:
-            worksheet.insert_rows([[] for _ in range(2 - current_rows)], row=current_rows + 1)
+            worksheet.insert_rows([[] for _ in range(2 - current_rows)], row=1)
+        print("🔍 Isi baris 2:", worksheet.row_values(2))
 
         worksheet.merge_cells('A2:H2')  # merge dulu
         worksheet.update('A2', tanggal_display)  # lalu isi
