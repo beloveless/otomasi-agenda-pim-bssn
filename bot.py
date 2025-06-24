@@ -61,10 +61,6 @@ except Exception as e:
     print(f"❌ Gagal membuka worksheet: {e}")
     exit(1)
 
-from gspread_formatting import CellFormat, TextFormat, HorizontalAlign, format_cell_range
-
-from gspread_formatting import CellFormat, TextFormat, format_cell_range
-
 def tulis_hari_dan_tanggal(ws, tanggal: datetime.date):
     hari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'][tanggal.weekday()]
     tanggal_str = tanggal.strftime('%d %B %Y')
