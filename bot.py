@@ -1,4 +1,4 @@
-import gspread, datetime, requests, os, json, pytz
+""import gspread, datetime, requests, os, json, pytz
 from oauth2client.service_account import ServiceAccountCredentials
 from gspread_formatting import *
 from datetime import datetime as dt
@@ -75,15 +75,13 @@ def get_teamup_data(url, token):
     response.raise_for_status()
     return response.json()
 
-# === Fungsi untuk border (fix error sebelumnya) ===
-from gspread_formatting import CellFormat, Border, Color, format_cell_range
-
+# === Fungsi untuk border ===
 def set_border(ws, range_string, style='SOLID', color=Color(0, 0, 0)):
     border = Border(
-        top={'style': style, 'color': color},
-        bottom={'style': style, 'color': color},
-        left={'style': style, 'color': color},
-        right={'style': style, 'color': color}
+        top=Border.Side(style=style, color=color),
+        bottom=Border.Side(style=style, color=color),
+        left=Border.Side(style=style, color=color),
+        right=Border.Side(style=style, color=color)
     )
     fmt = CellFormat(borders=border)
     format_cell_range(ws, range_string, fmt)
