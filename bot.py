@@ -45,15 +45,8 @@ spreadsheet = client.open_by_key(spreadsheet_id)
 try:
     worksheet = spreadsheet.worksheet(worksheet_name)
 except gspread.WorksheetNotFound:
-    print(f"❌ Worksheet '{worksheet_name}' tidak ditemukan.")
-    exit(1)
-
-
-try:
-    worksheet = spreadsheet.worksheet(worksheet_name)
-except gspread.WorksheetNotFound:
-    print(f"❌ Worksheet '{worksheet_name}' tidak ditemukan.")
-    exit(1)
+    print(f"⚠️ Worksheet '{worksheet_name}' tidak ditemukan. Membuat baru...")
+    worksheet = spreadsheet.add_worksheet(title=worksheet_name, rows="100", cols="10")
 
 # === Tambahan: Menuliskan Hari dan Tanggal setelah Judul ===
 from gspread_formatting import CellFormat, TextFormat, format_cell_range
