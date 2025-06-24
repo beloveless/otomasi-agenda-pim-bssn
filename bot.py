@@ -60,9 +60,6 @@ except Exception as e:
     print(f"❌ Gagal membuka worksheet: {e}")
     exit(1)
 
-from gspread_formatting import set_frozen, format_cell_range, CellFormat, TextFormat, HorizontalAlignment
-
-
 # === Tambahkan hari dan tanggal di row 2 (merge A2:H2) ===
 try:
     # Tentukan nama hari dalam Bahasa Indonesia
@@ -79,8 +76,7 @@ try:
     # Format teks: tebal dan rata tengah
     format_cell_range(worksheet, 'A2:H2', CellFormat(
         textFormat=TextFormat(bold=True),
-        horizontalAlignment=HorizontalAlignment('CENTER')
-    ))
+        horizontalAlignment='CENTER'))
 
     print(f"✅ Hari dan tanggal berhasil ditambahkan dan diformat: {tanggal_display}")
 except Exception as e:
