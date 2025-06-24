@@ -53,16 +53,22 @@ try:
     spreadsheet = client.open_by_key(spreadsheet_id)
     worksheet = spreadsheet.worksheet(sheet_name)
     print(f"✅ Worksheet '{sheet_name}' ditemukan.")
-    # === Tambahkan hari dan tanggal di row 2 (merge A2:H2) ===
     try:
         hari_dalam_bahasa = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
         nama_hari = hari_dalam_bahasa[tomorrow.weekday()]
         tanggal_display = f"{nama_hari}, {tomorrow.strftime('%d %B %Y')}"
-        worksheet.update('A2', tanggal_display)
-        worksheet.merge_cells('A2:H2')
+
+        # Pastikan worksheet minimal punya 2 baris
+        current_rows = len(worksheet.get_all_values())
+        if current_rows < 2:
+            worksheet.insert_rows([[] for _ in range(2 - current_rows)], row=current_rows + 1)
+
+        worksheet.merge_cells('A2:H2')  # merge dulu
+        worksheet.update('A2', tanggal_display)  # lalu isi
         format_cell_range(worksheet, 'A2:H2', CellFormat(
             textFormat=TextFormat(bold=True),
             horizontalAlignment='CENTER'))
+
         print(f"✅ Hari dan tanggal berhasil ditambahkan dan diformat: {tanggal_display}")
     except Exception as e:
         print(f"❌ Gagal menambahkan hari/tanggal ke worksheet: {e}")
