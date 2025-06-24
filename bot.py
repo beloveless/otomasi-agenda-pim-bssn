@@ -1,6 +1,6 @@
 import gspread, datetime, requests, os, json, pytz
 from oauth2client.service_account import ServiceAccountCredentials
-from gspread_formatting import CellFormat, TextFormat, format_cell_range, Color, Border
+from gspread_formatting import *
 from datetime import datetime as dt
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
@@ -53,7 +53,7 @@ def tulis_hari_dan_tanggal(ws, tanggal: datetime.date):
     hari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'][tanggal.weekday()]
     tanggal_str = tanggal.strftime('%d %B %Y')
     keterangan = f"{hari}, {tanggal_str}"
-    ws.update('A2', [[keterangan]])
+    ws.update(range_name='A2', values=[[keterangan]])
     ws.merge_cells('A2:H2')
     format_cell_range(ws, 'A2:H2', CellFormat(
         textFormat=TextFormat(bold=True),
@@ -76,12 +76,18 @@ def get_teamup_data(url, token):
     return response.json()
 
 # === Fungsi untuk border (fix error sebelumnya) ===
-def set_border(ws, range_string, style='SOLID', color=None):
-    if color is None:
-        color = Color(0, 0, 0)
-    border = Border(style=style, color=color)
+from gspread_formatting import CellFormat, Border, Color, format_cell_range, Side
+
+def set_border(ws, range_string, style='SOLID', color=Color(0, 0, 0)):
+    border = Border(
+        top=Side(style=style, color=color),
+        bottom=Side(style=style, color=color),
+        left=Side(style=style, color=color),
+        right=Side(style=style, color=color),
+    )
     fmt = CellFormat(borders=border)
     format_cell_range(ws, range_string, fmt)
+
 
 def add_rows_with_border(ws, count):
     last_row = len(ws.get_all_values())
