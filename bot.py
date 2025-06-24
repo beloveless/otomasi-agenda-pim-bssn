@@ -76,25 +76,24 @@ def get_teamup_data(url, token):
     return response.json()
 
 # === Fungsi untuk border (fix error sebelumnya) ===
-from gspread_formatting import CellFormat, Border, Color, format_cell_range, Side
+from gspread_formatting import CellFormat, Border, Color, format_cell_range
 
 def set_border(ws, range_string, style='SOLID', color=Color(0, 0, 0)):
     border = Border(
-        top=Side(style=style, color=color),
-        bottom=Side(style=style, color=color),
-        left=Side(style=style, color=color),
-        right=Side(style=style, color=color),
+        top={'style': style, 'color': color},
+        bottom={'style': style, 'color': color},
+        left={'style': style, 'color': color},
+        right={'style': style, 'color': color}
     )
     fmt = CellFormat(borders=border)
     format_cell_range(ws, range_string, fmt)
 
-
 def add_rows_with_border(ws, count):
     last_row = len(ws.get_all_values())
     for _ in range(count):
-        ws.insert_rows([[''] * 8 for _ in range(7)], row=last_row+1)
-        for i in range(last_row+1, last_row+8):
-            set_border(ws, f"B{i}:I{i}", style='SOLID', color=Color(0,0,0))
+        ws.insert_rows([[''] * 8 for _ in range(7)], row=last_row + 1)
+        for i in range(last_row + 1, last_row + 8):
+            set_border(ws, f"B{i}:I{i}", style='SOLID', color=Color(0, 0, 0))
         last_row += 7
 
 def remerge_and_number_blocks(ws):
