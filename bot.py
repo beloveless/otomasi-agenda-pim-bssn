@@ -1,4 +1,5 @@
-import gspread, datetime, requests, os, json, pytz  # ✅ Tambah pytzfrom oauth2client.service_account import ServiceAccountCredentials
+import gspread, datetime, requests, os, json, pytz
+from oauth2client.service_account import ServiceAccountCredentials  # ✅ Tambah baris ini secara terpisah
 from gspread_formatting import *
 from datetime import datetime as dt
 from google.oauth2 import service_account
