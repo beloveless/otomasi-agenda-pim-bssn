@@ -1,6 +1,7 @@
 import gspread, datetime, requests, os, json, pytz
 from oauth2client.service_account import ServiceAccountCredentials
 from gspread_formatting import *
+from gspread_formatting import CellFormat, Borders, Border, Color, format_cell_range
 from datetime import datetime as dt
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
@@ -77,11 +78,11 @@ def get_teamup_data(url, token):
 
 # === Fungsi untuk border ===
 def set_border(ws, range_string, style='SOLID', color=Color(0, 0, 0)):
-    border = Border(
-        top=Border.Side(style=style, color=color),
-        bottom=Border.Side(style=style, color=color),
-        left=Border.Side(style=style, color=color),
-        right=Border.Side(style=style, color=color)
+    border = Borders(
+        top=Border(style=style, color=color),
+        bottom=Border(style=style, color=color),
+        left=Border(style=style, color=color),
+        right=Border(style=style, color=color)
     )
     fmt = CellFormat(borders=border)
     format_cell_range(ws, range_string, fmt)
@@ -128,7 +129,7 @@ data = get_teamup_data(teamup_url, teamup_token)
 
 if data:
     events = data.get("events", [])
-    print(f"📅 Jumlah event ditemukan: {len(events)}")
+    print(f"🗕️ Jumlah event ditemukan: {len(events)}")
     needed_blocks = (len(events) + 6) // 7
     current_rows = len(worksheet.get_all_values())
     current_blocks = (current_rows - 5) // 7
