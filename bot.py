@@ -1,6 +1,6 @@
 import gspread, datetime, requests, os, json, pytz
-from oauth2client.service_account import ServiceAccountCredentials  # ✅ Tambah baris ini secara terpisah
-from gspread_formatting import *
+from oauth2client.service_account import ServiceAccountCredentials
+from gspread_formatting import CellFormat, TextFormat, format_cell_range, Color, Border
 from datetime import datetime as dt
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
@@ -48,31 +48,22 @@ except gspread.WorksheetNotFound:
     print(f"⚠️ Worksheet '{worksheet_name}' tidak ditemukan. Membuat baru...")
     worksheet = spreadsheet.add_worksheet(title=worksheet_name, rows="100", cols="10")
 
-# === Tambahan: Menuliskan Hari dan Tanggal setelah Judul ===
-from gspread_formatting import CellFormat, TextFormat, format_cell_range
-
+# === Menuliskan Hari dan Tanggal setelah Judul ===
 def tulis_hari_dan_tanggal(ws, tanggal: datetime.date):
     hari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'][tanggal.weekday()]
     tanggal_str = tanggal.strftime('%d %B %Y')
     keterangan = f"{hari}, {tanggal_str}"
-
-    # ✅ Perbaikan bagian ini
     ws.update('A2', [[keterangan]])
-
-    # Merge sel A2 sampai H2
     ws.merge_cells('A2:H2')
-
-    # Terapkan format rata tengah dan bold
     format_cell_range(ws, 'A2:H2', CellFormat(
         textFormat=TextFormat(bold=True),
         horizontalAlignment='CENTER'
     ))
-
     print(f"🗓️ Ditambahkan keterangan tanggal di baris 2 (A2:H2): {keterangan}")
 
 tulis_hari_dan_tanggal(worksheet, tomorrow)
 
-# === Fungsi Format dan Migrasi ===
+# === Fungsi bantu ===
 def format_time(start_datetime_str, end_datetime_str):
     start_dt = dt.fromisoformat(start_datetime_str)
     end_dt = dt.fromisoformat(end_datetime_str)
@@ -83,6 +74,19 @@ def get_teamup_data(url, token):
     response = requests.get(url, headers=headers)
     response.raise_for_status()
     return response.json()
+
+# === Fungsi untuk border (fix error sebelumnya) ===
+def set_border(ws, range_string, style='SOLID', color=None):
+    if color is None:
+        color = Color(0, 0, 0)
+    border = Border(
+        top={'style': style, 'color': color},
+        bottom={'style': style, 'color': color},
+        left={'style': style, 'color': color},
+        right={'style': style, 'color': color}
+    )
+    fmt = CellFormat(borders=border)
+    format_cell_range(ws, range_string, fmt)
 
 def add_rows_with_border(ws, count):
     last_row = len(ws.get_all_values())
