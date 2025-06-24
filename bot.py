@@ -96,7 +96,7 @@ def remerge_and_number_blocks(ws):
 
 def remove_empty_agenda_blocks(ws):
     data = ws.get_all_values()
-    for start_row in reversed(range(6, len(data)+1, 7)):
+    for start_row in reversed(range(13, len(data)+1, 7)):  # mulai dari blok kedua
         block = data[start_row-1:start_row+6]
         if all(all(cell.strip() == '' for cell in row[1:8]) for row in block):
             for _ in range(7):
