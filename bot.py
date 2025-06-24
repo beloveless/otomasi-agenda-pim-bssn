@@ -79,12 +79,7 @@ def get_teamup_data(url, token):
 def set_border(ws, range_string, style='SOLID', color=None):
     if color is None:
         color = Color(0, 0, 0)
-    border = Border(
-        top={'style': style, 'color': color},
-        bottom={'style': style, 'color': color},
-        left={'style': style, 'color': color},
-        right={'style': style, 'color': color}
-    )
+    border = Border(style=style, color=color)
     fmt = CellFormat(borders=border)
     format_cell_range(ws, range_string, fmt)
 
