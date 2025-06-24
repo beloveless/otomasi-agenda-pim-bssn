@@ -1,70 +1,45 @@
-import gspread, datetime, requests, os, json, pytz
+import gspread, datetime, requests, os, json, io
 from oauth2client.service_account import ServiceAccountCredentials
 from gspread_formatting import *
-from gspread_formatting import CellFormat, Borders, Border, Color, format_cell_range
 from datetime import datetime as dt
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 from telegram import Bot
-import asyncio
 
-# === Debug: Periksa variabel environment ===
-bot_token = os.getenv('TELEGRAM_TOKEN')
-chat_id = os.getenv('CHAT_ID')
-teamup_token = os.getenv('TEAMUP_TOKEN')
-google_creds = os.getenv('GOOGLE_CREDS')
+# === Ambil Secrets dari Environment ===
+google_creds_json = os.environ.get("GOOGLE_CREDS")
+bot_token = os.environ.get("TELEGRAM_TOKEN")
+chat_id = os.environ.get("CHAT_ID")
+teamup_token = os.environ.get("TEAMUP_TOKEN")
+spreadsheet_id = '1vn6sMouwi9OOkgSdDNg18Hz_UzTsEFSvQH--WSpOHP4'
 
-print("🔧 Cek variabel environment:")
-print(f"- TELEGRAM_TOKEN: {'✅ Ada' if bot_token else '❌ Kosong'}")
-print(f"- CHAT_ID: {chat_id}")
-print(f"- TEAMUP_TOKEN: {'✅ Ada' if teamup_token else '❌ Kosong'}")
-print(f"- GOOGLE_CREDS: {'✅ Ada' if google_creds else '❌ Kosong'}")
+# Simpan file kredensial sementara
+creds_path = "creds.json"
+with open(creds_path, "w") as f:
+    f.write(google_creds_json)
 
-# === Buat file kredensial dari secret ===
-with open('creds.json', 'w') as f:
-    f.write(google_creds)
-
-# === Autentikasi Google API ===
+# === Konfigurasi dan Autentikasi Google API ===
 scope = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
-creds = ServiceAccountCredentials.from_json_keyfile_name('creds.json', scope)
+creds = ServiceAccountCredentials.from_json_keyfile_name(creds_path, scope)
 client = gspread.authorize(creds)
-drive_creds = service_account.Credentials.from_service_account_file('creds.json', scopes=scope)
+drive_creds = service_account.Credentials.from_service_account_file(creds_path, scopes=scope)
 
-# === Tanggal dan Worksheet (Zona waktu Asia/Jakarta) ===
-jakarta = pytz.timezone("Asia/Jakarta")
-now_jakarta = datetime.datetime.now(jakarta)
-today = now_jakarta.date()
+# === Tanggal dan Worksheet ===
+today = datetime.date.today()
 tomorrow = today + datetime.timedelta(days=1)
 tomorrow_str = tomorrow.strftime('%Y-%m-%d')
 day_index = tomorrow.weekday()
 tomorrow_sheet = tomorrow.strftime("%d").lstrip('0')
 worksheet_name = f'{tomorrow_sheet}'
 
-spreadsheet_id = '1vn6sMouwi9OOkgSdDNg18Hz_UzTsEFSvQH--WSpOHP4'
 spreadsheet = client.open_by_key(spreadsheet_id)
-
 try:
     worksheet = spreadsheet.worksheet(worksheet_name)
 except gspread.WorksheetNotFound:
-    print(f"⚠️ Worksheet '{worksheet_name}' tidak ditemukan. Membuat baru...")
-    worksheet = spreadsheet.add_worksheet(title=worksheet_name, rows="100", cols="10")
+    print(f"Worksheet '{worksheet_name}' tidak ditemukan.")
+    exit(1)
 
-# === Menuliskan Hari dan Tanggal setelah Judul ===
-def tulis_hari_dan_tanggal(ws, tanggal: datetime.date):
-    hari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'][tanggal.weekday()]
-    tanggal_str = tanggal.strftime('%d %B %Y')
-    keterangan = f"{hari}, {tanggal_str}"
-    ws.update(range_name='A2', values=[[keterangan]])
-    ws.merge_cells('A2:H2')
-    format_cell_range(ws, 'A2:H2', CellFormat(
-        textFormat=TextFormat(bold=True),
-        horizontalAlignment='CENTER'
-    ))
-    print(f"🗓️ Ditambahkan keterangan tanggal di baris 2 (A2:H2): {keterangan}")
-
-tulis_hari_dan_tanggal(worksheet, tomorrow)
-
-# === Fungsi bantu ===
+# === Fungsi Utilitas ===
 def format_time(start_datetime_str, end_datetime_str):
     start_dt = dt.fromisoformat(start_datetime_str)
     end_dt = dt.fromisoformat(end_datetime_str)
@@ -76,23 +51,12 @@ def get_teamup_data(url, token):
     response.raise_for_status()
     return response.json()
 
-# === Fungsi untuk border ===
-def set_border(ws, range_string, style='SOLID', color=Color(0, 0, 0)):
-    border = Borders(
-        top=Border(style=style, color=color),
-        bottom=Border(style=style, color=color),
-        left=Border(style=style, color=color),
-        right=Border(style=style, color=color)
-    )
-    fmt = CellFormat(borders=border)
-    format_cell_range(ws, range_string, fmt)
-
 def add_rows_with_border(ws, count):
     last_row = len(ws.get_all_values())
     for _ in range(count):
-        ws.insert_rows([[''] * 8 for _ in range(7)], row=last_row + 1)
-        for i in range(last_row + 1, last_row + 8):
-            set_border(ws, f"B{i}:I{i}", style='SOLID', color=Color(0, 0, 0))
+        ws.insert_rows([[''] * 8 for _ in range(7)], row=last_row+1)
+        for i in range(last_row+1, last_row+8):
+            set_border(ws, f"B{i}:I{i}", style='SOLID', color=Color(0,0,0))
         last_row += 7
 
 def remerge_and_number_blocks(ws):
@@ -120,7 +84,7 @@ def isi_jika_kosong(ws):
             ws.update_cell(6, col_index, jam)
             ws.update_cell(7, col_index, f"Berdinas Di Kantor {kantor}")
 
-# === Proses Migrasi ===
+# === Migrasi Data TeamUp ===
 subcalendar_to_col = {10858904: 2, 10859020: 3, 10860315: 4, 10859016: 5, 10859017: 6, 10859018: 7, 10859019: 8}
 subcalendar_to_row = {k: 6 for k in subcalendar_to_col}
 
@@ -129,7 +93,6 @@ data = get_teamup_data(teamup_url, teamup_token)
 
 if data:
     events = data.get("events", [])
-    print(f"📅 Jumlah event ditemukan: {len(events)}")
     needed_blocks = (len(events) + 6) // 7
     current_rows = len(worksheet.get_all_values())
     current_blocks = (current_rows - 5) // 7
@@ -144,6 +107,7 @@ if data:
         worksheet.update_cell(row+1, col, f"{e['title']} di {e.get('location', '')}".strip())
         subcalendar_to_row[e['subcalendar_id']] = row + 7
 
+# === Finalisasi Sheet ===
 isi_jika_kosong(worksheet)
 remove_empty_agenda_blocks(worksheet)
 remerge_and_number_blocks(worksheet)
@@ -156,22 +120,12 @@ export_url = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/export?fo
 headers = {"Authorization": f"Bearer {drive_creds.token}"}
 pdf_file_name = f"agenda_{tomorrow_str}.pdf"
 response = requests.get(export_url, headers=headers)
-
 with open(pdf_file_name, 'wb') as f:
     f.write(response.content)
 
-print(f"✅ PDF berhasil dibuat: {pdf_file_name}")
-print(f"📁 Cek file ada? {os.path.exists(pdf_file_name)}")
-
 # === Kirim ke Telegram ===
-async def send_pdf():
-    try:
-        bot = Bot(token=bot_token)
-        with open(pdf_file_name, 'rb') as file:
-            await bot.send_document(chat_id=chat_id, document=file, filename=pdf_file_name)
-        print("✅ PDF berhasil dikirim ke Telegram.")
-    except Exception as e:
-        print(f"❌ Gagal mengirim ke Telegram: {e}")
+bot = Bot(token=bot_token)
+with open(pdf_file_name, 'rb') as file:
+    bot.send_document(chat_id=chat_id, document=file, filename=pdf_file_name)
 
-# Jalankan fungsi async
-asyncio.run(send_pdf())
+print("Selesai: migrasi agenda, ekspor PDF, dan pengiriman ke Telegram.")
