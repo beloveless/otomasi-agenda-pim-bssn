@@ -62,6 +62,7 @@ except Exception as e:
 
 from gspread_formatting import set_frozen, format_cell_range, CellFormat, TextFormat, HorizontalAlignment
 
+
 # === Tambahkan hari dan tanggal di row 2 (merge A2:H2) ===
 try:
     # Tentukan nama hari dalam Bahasa Indonesia
