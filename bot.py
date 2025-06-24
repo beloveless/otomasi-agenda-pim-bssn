@@ -41,20 +41,6 @@ except Exception as e:
     print(f"❌ Gagal autentikasi Google API: {e}")
     exit(1)
 
-# === Tambahkan hari dan tanggal di row 2 (merge A2:H2) ===
-try:
-    hari_dalam_bahasa = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
-    nama_hari = hari_dalam_bahasa[tomorrow.weekday()]
-    tanggal_display = f"{nama_hari}, {tomorrow.strftime('%d %B %Y')}"
-    worksheet.update('A2', tanggal_display)
-    worksheet.merge_cells('A2:H2')
-    format_cell_range(worksheet, 'A2:H2', CellFormat(
-        textFormat=TextFormat(bold=True),
-        horizontalAlignment='CENTER'))
-    print(f"✅ Hari dan tanggal berhasil ditambahkan dan diformat: {tanggal_display}")
-except Exception as e:
-    print(f"❌ Gagal menambahkan hari/tanggal ke worksheet: {e}")
-
 # === Tanggal & Worksheet ===
 try:
     today = datetime.date.today()
@@ -67,6 +53,20 @@ try:
     spreadsheet = client.open_by_key(spreadsheet_id)
     worksheet = spreadsheet.worksheet(sheet_name)
     print(f"✅ Worksheet '{sheet_name}' ditemukan.")
+    # === Tambahkan hari dan tanggal di row 2 (merge A2:H2) ===
+    try:
+        hari_dalam_bahasa = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
+        nama_hari = hari_dalam_bahasa[tomorrow.weekday()]
+        tanggal_display = f"{nama_hari}, {tomorrow.strftime('%d %B %Y')}"
+        worksheet.update('A2', tanggal_display)
+        worksheet.merge_cells('A2:H2')
+        format_cell_range(worksheet, 'A2:H2', CellFormat(
+            textFormat=TextFormat(bold=True),
+            horizontalAlignment='CENTER'))
+        print(f"✅ Hari dan tanggal berhasil ditambahkan dan diformat: {tanggal_display}")
+    except Exception as e:
+        print(f"❌ Gagal menambahkan hari/tanggal ke worksheet: {e}")
+
 except gspread.WorksheetNotFound:
     print(f"❌ Worksheet '{sheet_name}' tidak ditemukan.")
     exit(1)
