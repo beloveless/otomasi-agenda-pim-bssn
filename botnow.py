@@ -51,7 +51,8 @@ try:
     sheet_name = today.strftime("%d").lstrip('0')
 
     print(f"🕓 Sekarang (WIB): {now_jakarta.strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"📅 Target agenda tanggal: {today_str}")
+    print(f"📅 Target agenda tanggal: {today}")
+    print(f"📅 cek tanggal: {today}")
 
     spreadsheet_id = '1vn6sMouwi9OOkgSdDNg18Hz_UzTsEFSvQH--WSpOHP4'
     spreadsheet = client.open_by_key(spreadsheet_id)
