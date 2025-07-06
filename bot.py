@@ -58,7 +58,6 @@ try:
     spreadsheet = client.open_by_key(spreadsheet_id)
     worksheet = spreadsheet.worksheet(sheet_name)
     print(f"✅ Worksheet '{sheet_name}' ditemukan.")
-    hapus_semua_agenda(worksheet)
 except gspread.WorksheetNotFound:
     print(f"❌ Worksheet '{sheet_name}' tidak ditemukan.")
     exit(1)
@@ -66,6 +65,20 @@ except Exception as e:
     print(f"❌ Gagal membuka worksheet: {e}")
     exit(1)
 
+# === Bersihkan data lama dari worksheet ===
+def hapus_semua_agenda(ws):
+    data = ws.get_all_values()
+    start_row = 6
+    if len(data) > start_row:
+        end_col = chr(64 + len(data[0]))  # Kolom terakhir (misal: H = 72 -> H)
+        ws.batch_clear([f"A{start_row}:{end_col}{len(data)}"])
+        print(f"🧹 Semua blok agenda dari baris {start_row} berhasil dihapus.")
+    else:
+        print("ℹ️ Worksheet sudah kosong dari baris agenda.")
+
+hapus_semua_agenda(worksheet)
+
+# === Fungsi Utilitas ===
 def tulis_hari_dan_tanggal(ws, tanggal: datetime.date):
     hari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'][tanggal.weekday()]
     tanggal_str = tanggal.strftime('%d %B %Y')
@@ -128,16 +141,6 @@ def isi_jika_kosong(ws):
             jam = "08.00-16.30" if day_index == 4 else "08.00-16.00"
             ws.update_cell(6, col_index, jam)
             ws.update_cell(7, col_index, f"Berdinas Di Kantor {kantor}")
-
-def hapus_semua_agenda(ws):
-    data = ws.get_all_values()
-    start_row = 6  # Baris awal agenda, sesuaikan jika beda
-    if len(data) > start_row:
-        end_col = chr(64 + len(data[0]))  # Misal: H = kolom ke-8
-        ws.batch_clear([f"A{start_row}:{end_col}{len(data)}"])
-        print(f"🧹 Semua blok agenda mulai dari baris {start_row} berhasil dihapus.")
-    else:
-        print("ℹ️ Worksheet sudah kosong dari baris agenda.")
 
 # === Ambil dan isi data dari Teamup ===
 subcalendar_to_col = {
