@@ -1,7 +1,7 @@
-import gspread, datetime, requests, os, json, pytz
+import gspread, requests, os, json, pytz
+from datetime import datetime, timedelta
 from oauth2client.service_account import ServiceAccountCredentials
 from gspread_formatting import *
-from datetime import datetime as dt
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 import asyncio
@@ -44,7 +44,7 @@ except Exception as e:
 # === Tanggal & Worksheet ===
 try:
     jakarta = pytz.timezone("Asia/Jakarta")
-    now_jakarta = datetime.datetime.now(jakarta)
+    now_jakarta = datetime.now(jakarta)
     today = now_jakarta.date()
     today_str = today.strftime('%Y-%m-%d')
     day_index = today.weekday()
@@ -64,7 +64,7 @@ except Exception as e:
     print(f"❌ Gagal membuka worksheet: {e}")
     exit(1)
 
-def tulis_hari_dan_tanggal(ws, tanggal: datetime.date):
+def tulis_hari_dan_tanggal(ws, tanggal):
     hari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'][tanggal.weekday()]
     tanggal_str = tanggal.strftime('%d %B %Y')
     keterangan = f"{hari}, {tanggal_str}"
@@ -78,8 +78,8 @@ def tulis_hari_dan_tanggal(ws, tanggal: datetime.date):
 
 # === Fungsi Utilitas ===
 def format_time(start, end):
-    start_dt = dt.fromisoformat(start)
-    end_dt = dt.fromisoformat(end)
+    start_dt = datetime.fromisoformat(start)
+    end_dt = datetime.fromisoformat(end)
     return f"{start_dt.strftime('%H.%M')} - {end_dt.strftime('%H.%M')}"
 
 def get_teamup_data(url, token):
