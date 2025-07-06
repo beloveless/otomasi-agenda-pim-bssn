@@ -65,20 +65,6 @@ except Exception as e:
     print(f"❌ Gagal membuka worksheet: {e}")
     exit(1)
 
-# === Bersihkan data lama dari worksheet ===
-def hapus_semua_agenda(ws):
-    data = ws.get_all_values()
-    start_row = 6
-    if len(data) > start_row:
-        end_col = chr(64 + len(data[0]))  # Kolom terakhir (misal: H = 72 -> H)
-        ws.batch_clear([f"A{start_row}:{end_col}{len(data)}"])
-        print(f"🧹 Semua blok agenda dari baris {start_row} berhasil dihapus.")
-    else:
-        print("ℹ️ Worksheet sudah kosong dari baris agenda.")
-
-hapus_semua_agenda(worksheet)
-
-# === Fungsi Utilitas ===
 def tulis_hari_dan_tanggal(ws, tanggal: datetime.date):
     hari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'][tanggal.weekday()]
     tanggal_str = tanggal.strftime('%d %B %Y')
