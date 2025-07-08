@@ -6,6 +6,7 @@ on:
   schedule:
     - cron: '0 3 * * *'  # 06:30 WIB = 23:30 UTC (hari sebelumnya)
 
+    
 jobs:
   run-bot:
     runs-on: ubuntu-latest
