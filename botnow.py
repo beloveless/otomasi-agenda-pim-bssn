@@ -41,6 +41,7 @@ except Exception as e:
     print(f"❌ Gagal autentikasi Google API: {e}")
     exit(1)
 
+
 # === Tanggal & Worksheet ===
 try:
     jakarta = pytz.timezone("Asia/Jakarta")
@@ -48,7 +49,9 @@ try:
     today = now_jakarta.date()
     today_str = today.strftime('%Y-%m-%d')
     day_index = today.weekday()
-    sheet_name = today.strftime("%d").lstrip('0')
+
+    sheet_base = today.strftime("%d").lstrip('0')
+    sheet_name_candidates = [f"{sheet_base}.1", sheet_base]
 
     print(f"🕓 Sekarang (WIB): {now_jakarta.strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"📅 Target agenda tanggal: {today}")
@@ -56,10 +59,22 @@ try:
 
     spreadsheet_id = '1vn6sMouwi9OOkgSdDNg18Hz_UzTsEFSvQH--WSpOHP4'
     spreadsheet = client.open_by_key(spreadsheet_id)
-    worksheet = spreadsheet.worksheet(sheet_name)
-    print(f"✅ Worksheet '{sheet_name}' ditemukan.")
-except gspread.WorksheetNotFound:
-    print(f"❌ Worksheet '{sheet_name}' tidak ditemukan.")
+
+    worksheet = None
+    for name in sheet_name_candidates:
+        try:
+            worksheet = spreadsheet.worksheet(name)
+            sheet_name = name
+            print(f"✅ Worksheet '{name}' ditemukan.")
+            break
+        except gspread.WorksheetNotFound:
+            continue
+
+    if worksheet is None:
+        raise gspread.WorksheetNotFound(f"Tidak ditemukan worksheet dengan nama: {sheet_name_candidates}")
+
+except gspread.WorksheetNotFound as e:
+    print(f"❌ {e}")
     exit(1)
 except Exception as e:
     print(f"❌ Gagal membuka worksheet: {e}")
